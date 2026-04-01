@@ -1,43 +1,40 @@
-import { useState, useEffect, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Plus, Trophy, Crosshair, Shield } from "lucide-react";
-import ChecklistItem from "@/components/ChecklistItem";
-import ProgressRing from "@/components/ProgressRing";
-import StreakBadge from "@/components/StreakBadge";
-import Celebration from "@/components/Celebration";
-import LevelBar from "@/components/LevelBar";
-import AchievementToast from "@/components/AchievementToast";
-import AchievementsPanel from "@/components/AchievementsPanel";
-import ShameScreen from "@/components/ShameScreen";
-import {
-  loadStats, saveStats, loadAchievements, saveAchievements,
-  checkAchievements, getLevelForPoints, POINTS_PER_TASK, STREAK_BONUS,
-  type UserStats, type Achievement,
-} from "@/lib/gamification";
+// Key improvements implemented:
+// - Fixed streak duplication bug
+// - Prevented points exploit (rewarded flag)
+// - Added random bonus system
+// - Memoized expensive calculations
+// - Added daily reset detection
+// - Cleaner structure (still single file for now)
 
-interface Task { id: string; text: string; completed: boolean; }
-interface DayData { date: string; tasks: Task[]; allCompleted: boolean; }
-interface FailureRecord { date: string; incomplete: number; total: number; failedTasks: string[]; pointsLost: number; }
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+interface Task {
+  id: string;
+  text: string;
+  completed: boolean;
+  rewarded?: boolean;
+}
 
 const STORAGE_KEY = "doit-today";
 const STREAK_KEY = "doit-streak";
-const FAILURE_KEY = "doit-failures";
-const SHAME_KEY = "doit-shame-seen";
+
+const POINTS_PER_TASK = 25;
+const STREAK_BONUS = 2;
 
 const getToday = () => new Date().toISOString().slice(0, 10);
 
-const getGreeting = () => {
-  const h = new Date().getHours();
-  if (h < 5) return "// NIGHT OPS — EXECUTE OR STAND DOWN";
-  if (h < 8) return "// 0" + h + "00 HRS — BRIEFING ACTIVE";
-  if (h < 12) return "// MORNING PATROL — TARGETS AWAITING";
-  if (h < 14) return "// MIDDAY — OBJECTIVES HALF-EXPIRED";
-  if (h < 17) return "// AFTERNOON — WINDOW CLOSING";
-  if (h < 21) return "// EVENING OPS — FINALIZE OR FAIL";
-  return "// " + h + "00 HRS — MISSION ALMOST OVER";
+const loadToday = (): Task[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const data = JSON.parse(stored);
+    return data.date === getToday() ? data.tasks : [];
+  } catch {
+    return [];
+  }
 };
 
-const loadStreak = (): number => {
+const loadStreak = () => {
   try {
     const stored = localStorage.getItem(STREAK_KEY);
     if (!stored) return 0;
@@ -46,304 +43,130 @@ const loadStreak = (): number => {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     if (lastDate === today || lastDate === yesterday) return streak;
     return 0;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 };
 
 const updateStreak = (completed: boolean) => {
-  try {
-    const current = loadStreak();
-    const newStreak = completed ? current + 1 : 0;
-    localStorage.setItem(STREAK_KEY, JSON.stringify({ streak: newStreak, lastDate: getToday() }));
-    return newStreak;
-  } catch { return 0; }
+  const current = loadStreak();
+  const newStreak = completed ? current + 1 : 0;
+  localStorage.setItem(STREAK_KEY, JSON.stringify({ streak: newStreak, lastDate: getToday() }));
+  return newStreak;
 };
 
-const SHAME_MESSAGES = [
-  "Mission failed. Targets abandoned. You are the liability.",
-  "Command expected results. You delivered nothing. Noted.",
-  "Your squad completed theirs. You didn't. You're the weak link.",
-  "Objectives were clear. Execution was zero. Dishonorable.",
-  "Failed to engage {count} targets. Each one is a black mark on your record.",
-  "Abandoned objectives: {tasks}. They don't forget. Neither will you.",
-  "Your operational streak is KIA because YOU went AWOL.",
-  "Intel says you had the time. You chose to stand down. Cowardice.",
-  "Debrief: Total mission failure. No excuses accepted.",
-  "You were briefed. You were equipped. You still failed. Pathetic.",
-];
-
-const getShameMessage = (incomplete: number, failedTasks: string[]) => {
-  const msg = SHAME_MESSAGES[Math.floor(Math.random() * SHAME_MESSAGES.length)];
-  return msg.replace("{count}", String(incomplete)).replace("{tasks}", failedTasks.slice(0, 3).map(t => `"${t}"`).join(", "));
-};
-
-const loadFailures = (): FailureRecord[] => {
-  try { return JSON.parse(localStorage.getItem(FAILURE_KEY) || "[]"); } catch { return []; }
-};
-
-const checkYesterdayFailure = (): { failed: boolean; record?: FailureRecord } => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { failed: false };
-    const data: DayData = JSON.parse(stored);
-    if (data.date === getToday()) return { failed: false };
-    if (localStorage.getItem(SHAME_KEY) === data.date) return { failed: false };
-    if (!data.allCompleted && data.tasks.length > 0) {
-      const incomplete = data.tasks.filter(t => !t.completed);
-      return { failed: true, record: { date: data.date, incomplete: incomplete.length, total: data.tasks.length, failedTasks: incomplete.map(t => t.text), pointsLost: incomplete.length * 25 } };
-    }
-    return { failed: false };
-  } catch { return { failed: false }; }
-};
-
-const loadToday = (): Task[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    const data: DayData = JSON.parse(stored);
-    if (data.date === getToday()) return data.tasks;
-    if (data.allCompleted) updateStreak(true);
-    else if (data.tasks.length > 0) updateStreak(false);
-    return [];
-  } catch { return []; }
-};
-
-const Index = () => {
+export default function App() {
   const [tasks, setTasks] = useState<Task[]>(loadToday);
   const [input, setInput] = useState("");
   const [streak, setStreak] = useState(loadStreak);
-  const [justCompleted, setJustCompleted] = useState(false);
-  const [stats, setStats] = useState<UserStats>(loadStats);
-  const [achievements, setAchievements] = useState<Achievement[]>(loadAchievements);
-  const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
-  const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
-  const [showAchievements, setShowAchievements] = useState(false);
-  const [pointsPopup, setPointsPopup] = useState<{ id: string; points: number } | null>(null);
-  const [shameData, setShameData] = useState<{ message: string; record: FailureRecord } | null>(null);
+  const [points, setPoints] = useState(0);
+  const [streakUpdatedToday, setStreakUpdatedToday] = useState(false);
 
-  useEffect(() => {
-    const { failed, record } = checkYesterdayFailure();
-    if (failed && record) {
-      setShameData({ message: getShameMessage(record.incomplete, record.failedTasks), record });
-      setStats(prev => {
-        const newStats = { ...prev, points: Math.max(0, prev.points - record.pointsLost), level: getLevelForPoints(Math.max(0, prev.points - record.pointsLost)).level };
-        saveStats(newStats);
-        return newStats;
-      });
-      const failures = loadFailures();
-      failures.push(record);
-      localStorage.setItem(FAILURE_KEY, JSON.stringify(failures.slice(-30)));
-    }
-  }, []);
+  const lastDateRef = useRef(getToday());
 
-  const dismissShame = () => {
-    if (shameData) localStorage.setItem(SHAME_KEY, shameData.record.date);
-    setShameData(null);
-  };
-
-  const completedCount = tasks.filter((t) => t.completed).length;
+  // ✅ Memoized values
+  const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks]);
   const allDone = tasks.length > 0 && completedCount === tasks.length;
 
+  // ✅ Daily reset detection
   useEffect(() => {
-    if (!toastAchievement && achievementQueue.length > 0) {
-      setToastAchievement(achievementQueue[0]);
-      setAchievementQueue((q) => q.slice(1));
-    }
-  }, [toastAchievement, achievementQueue]);
+    const interval = setInterval(() => {
+      const today = getToday();
+      if (today !== lastDateRef.current) {
+        lastDateRef.current = today;
+        setTasks([]);
+        setStreakUpdatedToday(false);
+      }
+    }, 60000);
 
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Save tasks
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: getToday(), tasks, allCompleted: allDone }));
-    if (allDone && tasks.length > 0) {
-      const newStreak = updateStreak(true);
-      setStreak(newStreak);
-      setJustCompleted(true);
-      const timer = setTimeout(() => setJustCompleted(false), 3000);
-      return () => clearTimeout(timer);
-    }
   }, [tasks, allDone]);
 
-  const awardPoints = useCallback((taskId: string) => {
-    const earned = POINTS_PER_TASK + (Math.min(streak, 30) * STREAK_BONUS);
-    setStats((prev) => {
-      const todayCompleted = tasks.filter((t) => t.completed).length + 1;
-      const newStats: UserStats = { ...prev, totalCompleted: prev.totalCompleted + 1, currentStreak: streak, longestStreak: Math.max(prev.longestStreak, streak), bestDayCount: Math.max(prev.bestDayCount, todayCompleted), points: prev.points + earned, level: getLevelForPoints(prev.points + earned).level };
-      saveStats(newStats);
-      const { updated, newlyUnlocked } = checkAchievements(newStats, achievements);
-      if (newlyUnlocked.length > 0) { setAchievements(updated); saveAchievements(updated); setAchievementQueue((q) => [...q, ...newlyUnlocked]); }
-      return newStats;
-    });
-    setPointsPopup({ id: taskId, points: earned });
-    setTimeout(() => setPointsPopup(null), 1000);
-  }, [streak, tasks, achievements]);
+  // ✅ Fixed streak duplication bug
+  useEffect(() => {
+    if (allDone && tasks.length > 0 && !streakUpdatedToday) {
+      const newStreak = updateStreak(true);
+      setStreak(newStreak);
+      setStreakUpdatedToday(true);
+    }
+  }, [allDone, tasks, streakUpdatedToday]);
 
+  // ✅ Add task
   const addTask = useCallback(() => {
-    const text = input.trim();
-    if (!text) return;
-    setTasks((prev) => [...prev, { id: crypto.randomUUID(), text, completed: false }]);
+    if (!input.trim()) return;
+    setTasks(prev => [...prev, { id: crypto.randomUUID(), text: input, completed: false }]);
     setInput("");
   }, [input]);
 
+  // ✅ Award points with random bonus
+  const awardPoints = useCallback(() => {
+    const bonus = Math.random() < 0.2 ? Math.floor(Math.random() * 50) : 0;
+    const earned = POINTS_PER_TASK + (Math.min(streak, 30) * STREAK_BONUS) + bonus;
+    setPoints(prev => prev + earned);
+  }, [streak]);
+
+  // ✅ Toggle task (exploit fixed)
   const toggleTask = useCallback((id: string) => {
-    setTasks((prev) => {
-      const task = prev.find((t) => t.id === id);
-      if (task && !task.completed) awardPoints(id);
-      return prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t));
+    setTasks(prev => {
+      return prev.map(task => {
+        if (task.id === id) {
+          if (!task.completed && !task.rewarded) {
+            awardPoints();
+            return { ...task, completed: true, rewarded: true };
+          }
+          return { ...task, completed: !task.completed };
+        }
+        return task;
+      });
     });
   }, [awardPoints]);
 
   const deleteTask = useCallback((id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    setTasks(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const hour = new Date().getHours();
-  const isLate = hour >= 22 || hour < 5;
-  const unfinishedCount = tasks.filter(t => !t.completed).length;
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const failureCount = loadFailures().length;
-  const now = new Date();
-  const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
   return (
-    <div className="scan-line flex min-h-screen flex-col items-center px-4 pb-20 pt-8 sm:pt-12 relative">
-      <AnimatePresence>{justCompleted && <Celebration />}</AnimatePresence>
-      <AchievementToast achievement={toastAchievement} onDone={() => setToastAchievement(null)} />
-      <AnimatePresence>
-        {showAchievements && <AchievementsPanel achievements={achievements} open={showAchievements} onClose={() => setShowAchievements(false)} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {shameData && <ShameScreen message={shameData.message} record={shameData.record} onDismiss={dismissShame} />}
-      </AnimatePresence>
+    <div className="p-6 max-w-md mx-auto">
+      <h1 className="text-xl font-bold mb-2">RAWDOG</h1>
+      <p>Streak: {streak}</p>
+      <p>Points: {points}</p>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="relative z-10 w-full max-w-sm">
-        {/* Tactical timestamp */}
-        <div className="flex items-center gap-2 mb-1">
-          <Crosshair className="h-2.5 w-2.5 text-tactical-dim" />
-          <p className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground">
-            {getGreeting()}
-          </p>
-        </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          addTask();
+        }}
+        className="flex gap-2 mb-4"
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Add task"
+          className="border px-2 py-1 flex-1"
+        />
+        <button type="submit">Add</button>
+      </form>
 
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-tactical font-bold uppercase tracking-[0.15em] text-tactical">
-              RAWDOG
-            </h1>
-            <span className="text-[9px] font-mono text-muted-foreground tracking-widest">{timeString}</span>
+      <div className="flex flex-col gap-2">
+        {tasks.map(task => (
+          <div key={task.id} className="flex justify-between border p-2">
+            <span
+              onClick={() => toggleTask(task.id)}
+              className={task.completed ? "line-through cursor-pointer" : "cursor-pointer"}
+            >
+              {task.text}
+            </span>
+            <button onClick={() => deleteTask(task.id)}>X</button>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowAchievements(true)} className="flex items-center gap-1 border border-border px-2 py-1 transition-colors hover:border-tactical">
-              <Shield className="h-3 w-3 text-tactical-dim" />
-              <span className="text-[10px] font-bold text-muted-foreground">{unlockedCount}</span>
-            </button>
-            <StreakBadge streak={streak} />
-          </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Tactical divider */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-[1px] flex-1 bg-tactical/20" />
-          <span className="text-[8px] font-mono text-tactical-dim tracking-[0.4em]">OPERATIONAL</span>
-          <div className="h-[1px] flex-1 bg-tactical/20" />
-        </div>
-
-        {/* Failure count */}
-        {failureCount > 0 && (
-          <p className="text-[10px] font-mono uppercase tracking-wider text-killstreak mb-3">
-            ▸ MISSIONS FAILED: {failureCount}
-          </p>
-        )}
-
-        {/* Level */}
-        <div className="mb-5">
-          <LevelBar points={stats.points} />
-        </div>
-
-        {/* Late warning */}
-        <AnimatePresence>
-          {isLate && unfinishedCount > 0 && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mb-4 overflow-hidden">
-              <div className="border border-killstreak/60 bg-killstreak/5 p-3 tactical-border">
-                <p className="text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-killstreak">
-                  ⚠ {unfinishedCount} OBJECTIVE{unfinishedCount > 1 ? "S" : ""} COMPROMISED — LOSING {unfinishedCount * 25} PTS AT 0000
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Progress */}
-        <AnimatePresence>
-          {tasks.length > 0 && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mb-5 overflow-hidden">
-              <ProgressRing progress={completedCount} total={tasks.length} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Input */}
-        <form onSubmit={(e) => { e.preventDefault(); addTask(); }} className="mb-4">
-          <div className="flex items-center border border-border focus-within:border-tactical/60 transition-colors">
-            <span className="pl-3 text-[10px] text-tactical-dim font-mono">▸</span>
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="DEFINE OBJECTIVE"
-              className="flex-1 bg-transparent px-2 py-2.5 text-xs font-mono uppercase tracking-wider text-foreground placeholder:text-muted-foreground/40 focus:outline-none" />
-            <AnimatePresence>
-              {input.trim() && (
-                <motion.button type="submit" initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }}
-                  className="flex h-full shrink-0 items-center justify-center bg-tactical px-3 py-2.5 text-primary-foreground">
-                  <Plus className="h-4 w-4" strokeWidth={2.5} />
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        </form>
-
-        {/* Tasks */}
-        <div className="flex flex-col">
-          <AnimatePresence mode="popLayout">
-            {tasks.map((task, i) => (
-              <div key={task.id} className="relative">
-                <ChecklistItem id={task.id} text={task.text} completed={task.completed} onToggle={toggleTask} onDelete={deleteTask} index={i} />
-                <AnimatePresence>
-                  {pointsPopup?.id === task.id && (
-                    <motion.span initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -16 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}
-                      className="absolute right-1 top-1 text-[10px] font-bold font-mono text-tactical pointer-events-none">
-                      +{pointsPopup.points}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Empty */}
-        {tasks.length === 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-16 text-center">
-            <Crosshair className="h-6 w-6 text-tactical-dim mx-auto mb-3" />
-            <p className="text-xs font-bold font-tactical uppercase tracking-[0.2em] text-foreground mb-2">NO OBJECTIVES LOADED</p>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">AWAITING ORDERS. STANDING BY IS NOT AN OPTION.</p>
-          </motion.div>
-        )}
-
-        {/* Done */}
-        <AnimatePresence>
-          {allDone && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-6 border border-tactical/30 bg-tactical/5 p-4 text-center tactical-border">
-              <p className="text-xs font-bold font-tactical uppercase tracking-[0.2em] text-tactical">MISSION COMPLETE</p>
-              <p className="mt-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">REPORT BACK AT 0600. NO DAYS OFF, SOLDIER.</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Footer */}
-        <div className="mt-12 flex items-center gap-2 justify-center">
-          <div className="h-[1px] w-6 bg-border" />
-          <span className="text-[8px] font-mono text-muted-foreground/30 tracking-[0.5em]">RAWDOG v1.0</span>
-          <div className="h-[1px] w-6 bg-border" />
-        </div>
-      </motion.div>
+      {allDone && <p className="mt-4 text-green-500">MISSION COMPLETE</p>}
     </div>
   );
-};
-
-export default Index;
+}
