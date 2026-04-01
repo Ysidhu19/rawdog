@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RAWDOG</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React + ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+</head>
+<body class="bg-gray-900 flex justify-center items-start p-8 min-h-screen">
+
+<div id="root" class="w-full max-w-md"></div>
+
+<script type="text/javascript">
+  const { useState, useEffect } = React;
+
+  function App() {
+    // Tasks
+    const [tasks, setTasks] = useState(
+      JSON.parse(localStorage.getItem("rawdogTasks")) || []
+    );
+    // Timer
+    const [seconds, setSeconds] = useState(50 * 60);
+    const [running, setRunning] = useState(false);
+    // Streak
+    const [streak, setStreak] = useState(
+      parseInt(localStorage.getItem("rawdogStreak")) || 0
+    );
+    // Input
+    const [input, setInput] = useState("");
+
+    // Update localStorage & streak
+    useEffect(() => {
+      localStorage.setItem("rawdogTasks", JSON.stringify(tasks));
+      const allComplete = tasks.length > 0 && tasks.every(t => t.completed);
+      if(allComplete) setStreak(prev => prev + 1);
+      else if(tasks.some(t => !t.completed)) setStreak(0);
+      localStorage.setItem("rawdogStreak", streak);
+    }, [tasks]);
+
+    // Timer
+    useEffect(() => {
+      let timer;
+      if(running) {
+        timer = setInterval(() => {
+          setSeconds(prev => prev > 0 ? prev - 1 : 0);
+        }, 1000);
+      }
+      return () => clearInterval(timer);
+    }, [running]);
+
+    // Helpers
+    const addTask = (title) => {
+      if(!title.trim()) return;
+      setTasks([...tasks, { id: Date.now(), title, completed: false }]);
+    };
+    const toggleTask = (id) => {
+      setTasks(tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t));
+    };
+    const deleteTask = (id) => {
+      setTasks(tasks.filter(t => t.id !== id));
+    };
+    const formatTime = (sec) => {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    };
+
+    return (
+      React.createElement('div', {className: "flex flex-col items-center w-full"},
+        // Title
+        React.createElement('h1', {className: "text-5xl font-bold text-green-800 uppercase mb-6"}, "RAWDOG"),
+        // Timer
+        React.createElement('div', {className: "mb-6"},
+          React.createElement('div', {className: "text-3xl font-bold text-white"}, formatTime(seconds)),
+          React.createElement('button', {
+            onClick: () => setRunning(!running),
+            className: "mt-2 px-4 py-2 bg-red-800 rounded uppercase font-bold text-white"
+          }, running ? "Abort" : "Commence")
+        ),
+        // Task Input
+        React.createElement('div', {className: "flex w-full mb-4"},
+          React.createElement('input', {
+            className: "flex-grow p-2 rounded-l text-black",
+            placeholder: "Add mission...",
+            value: input,
+            onChange: e => setInput(e.target.value)
+          }),
+          React.createElement('button', {
+            onClick: () => { addTask(input); setInput(""); },
+            className: "bg-red-800 p-2 rounded-r font-bold uppercase text-white"
+          }, "Deploy")
+        ),
+        // Task List
+        React.createElement('div', {className: "w-full"},
+          tasks.map(task =>
+            React.createElement('div', {
+              key: task.id,
+              className: "flex justify-between items-center bg-green-800 p-3 mb-2 rounded cursor-pointer"
+            },
+              React.createElement('div', {
+                onClick: () => toggleTask(task.id),
+                className: task.completed ? "line-through text-gray-400 flex-grow" : "flex-grow"
+              }, task.title),
+              React.createElement('button', {
+                onClick: () => deleteTask(task.id),
+                className: "text-red-800 font-bold ml-2"
+              }, "X")
+            )
+          )
+        ),
+        // Streak
+        React.createElement('div', {className: "mt-6 text-xl font-bold text-white"}, `Current Streak: ${streak}`)
+      )
+    );
+  }
+
+  // Render
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(React.createElement(App));
+</script>
+
+</body>
+</html>
