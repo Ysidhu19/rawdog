@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>rawdog · liquid glass</title>
+  <title>rawdog · intuitive focus</title>
   
   <link rel="manifest" href="data:application/manifest+json,{name:'rawdog',short_name:'rawdog',theme_color:'%23f5f5f7',background_color:'%23f5f5f7',display:'standalone',scope:'/',start_url:'/'}">
   <meta name="theme-color" content="#f5f5f7">
@@ -19,7 +19,6 @@
       box-sizing: border-box;
     }
 
-    /* Liquid animated background */
     body {
       --accent: #007aff;
       --accent-light: #e8f0fe;
@@ -48,7 +47,6 @@
       transition: background 0.3s, color 0.2s;
     }
 
-    /* Soft floating orbs for depth */
     body::before {
       content: '';
       position: fixed;
@@ -73,7 +71,6 @@
       100% { transform: translate(-3%, -2%) scale(1.02); }
     }
 
-    /* Dark mode liquid glass */
     body.dark {
       --accent: #0a84ff;
       --accent-light: rgba(10, 132, 255, 0.15);
@@ -94,7 +91,6 @@
                   radial-gradient(circle at 80% 70%, rgba(100, 180, 255, 0.06) 0%, transparent 50%);
     }
 
-    /* Main card – liquid glass with Apple proportions */
     .app-card {
       max-width: 680px;
       width: 100%;
@@ -116,7 +112,6 @@
       100% { transform: translateY(-4px); }
     }
 
-    /* Glossy edge highlight */
     .app-card::after {
       content: '';
       position: absolute;
@@ -129,7 +124,6 @@
       pointer-events: none;
     }
 
-    /* Header */
     .app-header {
       display: flex;
       align-items: baseline;
@@ -165,7 +159,6 @@
       border: 0.5px solid var(--glass-border);
     }
 
-    /* Status row */
     .status-row {
       display: flex;
       justify-content: space-between;
@@ -184,6 +177,7 @@
       background: transparent;
       padding: 0.2rem 0;
       font-weight: 500;
+      position: relative;
     }
     .streak-number {
       font-weight: 600;
@@ -194,8 +188,12 @@
       font-size: 0.9rem;
       color: var(--text-secondary);
     }
+    .streak-info {
+      margin-left: 4px;
+      cursor: help;
+      opacity: 0.6;
+    }
 
-    /* Progress bar – thin line */
     .progress-section {
       margin-bottom: 2rem;
     }
@@ -224,7 +222,6 @@
       box-shadow: 0 0 6px var(--accent);
     }
 
-    /* Checklist – clean items with glass hover */
     .checklist {
       list-style: none;
       margin: 0.5rem 0 2rem;
@@ -242,7 +239,6 @@
       background: rgba(128, 128, 128, 0.04);
     }
 
-    /* Apple‑style checkbox with glass touch */
     .checkbox-custom {
       flex-shrink: 0;
       width: 22px;
@@ -303,8 +299,31 @@
       transition: opacity 0.2s;
       cursor: pointer;
       color: var(--text-secondary);
+      position: relative;
     }
     .edit-icon:hover { opacity: 0.8; }
+    .edit-icon::after {
+      content: "Click text to edit";
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      box-shadow: var(--shadow-card);
+      border: 0.5px solid var(--glass-border);
+    }
+    .edit-icon:hover::after {
+      opacity: 1;
+    }
     .delete-btn {
       background: none;
       border: none;
@@ -323,15 +342,17 @@
       color: var(--delete-hover);
     }
 
-    /* Empty state */
     .empty-state {
       padding: 2.5rem 0.5rem;
       text-align: center;
       color: var(--text-secondary);
       font-size: 1rem;
     }
+    .empty-state strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
 
-    /* Add section – glass input */
     .add-section {
       display: flex;
       gap: 0.8rem;
@@ -413,7 +434,6 @@
       gap: 0.5rem;
     }
 
-    /* Footer */
     .footer-bar {
       margin-top: 2rem;
       display: flex;
@@ -471,6 +491,33 @@
       font-size: 0.7rem;
       color: var(--text-secondary);
       opacity: 0.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Tooltip for streak */
+    .tooltip-trigger {
+      position: relative;
+    }
+    .tooltip-trigger:hover::after {
+      content: "Complete all tasks daily to build a streak";
+      position: absolute;
+      bottom: 150%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      box-shadow: var(--shadow-card);
+      border: 0.5px solid var(--glass-border);
+      pointer-events: none;
+      z-index: 100;
     }
   </style>
 </head>
@@ -483,10 +530,11 @@
 
   <div class="status-row">
     <div class="greeting" id="greetingMsg">get it done</div>
-    <div class="streak-pill">
+    <div class="streak-pill tooltip-trigger">
       <span>🔥</span>
       <span class="streak-number" id="streakValue">0</span>
       <span class="streak-message" id="streakContext"></span>
+      <span class="streak-info" title="Complete all tasks daily to build a streak"><i data-feather="info" width="14" height="14"></i></span>
     </div>
   </div>
 
@@ -509,26 +557,28 @@
 
   <div class="action-bar">
     <div class="action-group">
-      <button class="btn btn-secondary" id="resetDailyBtn"><i data-feather="rotate-ccw"></i> Reset</button>
-      <button class="btn btn-secondary" id="clearAllBtn"><i data-feather="trash-2"></i> Clear</button>
-      <button class="btn btn-secondary" id="carryOverBtn"><i data-feather="calendar"></i> Carry</button>
+      <button class="btn btn-secondary" id="resetDailyBtn" title="Uncheck all tasks for a fresh start"><i data-feather="rotate-ccw"></i> Reset</button>
+      <button class="btn btn-secondary" id="clearAllBtn" title="Delete all tasks (undo available)"><i data-feather="trash-2"></i> Clear</button>
+      <button class="btn btn-secondary" id="carryOverBtn" title="Add yesterday's unfinished tasks"><i data-feather="calendar"></i> Carry</button>
     </div>
     <div class="action-group">
-      <button class="btn btn-secondary" id="sampleTasksBtn"><i data-feather="list"></i> Sample</button>
+      <button class="btn btn-secondary" id="sampleTasksBtn" title="Load example tasks"><i data-feather="list"></i> Sample</button>
       <button class="btn btn-secondary" id="themeToggleBtn"><i data-feather="moon"></i> Dark</button>
-      <button class="btn btn-secondary" id="notifyBtn"><i data-feather="bell"></i> Remind</button>
+      <button class="btn btn-secondary" id="notifyBtn" title="Enable daily reminders"><i data-feather="bell"></i> Remind</button>
     </div>
   </div>
 
   <div class="footer-bar">
-    <span>rawdog · liquid glass</span>
+    <span>rawdog · intuitive focus</span>
     <div class="footer-actions">
-      <button id="exportDataBtn"><i data-feather="download" width="14" height="14"></i> Export</button>
-      <button id="shareStreakBtn"><i data-feather="share-2" width="14" height="14"></i> Share</button>
-      <button id="soundToggleBtn"><i data-feather="volume-2" width="14" height="14"></i> Sound</button>
+      <button id="exportDataBtn" title="Download backup"><i data-feather="download" width="14" height="14"></i> Export</button>
+      <button id="shareStreakBtn" title="Share your streak"><i data-feather="share-2" width="14" height="14"></i> Share</button>
+      <button id="soundToggleBtn" title="Toggle sound effects"><i data-feather="volume-2" width="14" height="14"></i> Sound</button>
     </div>
   </div>
-  <div class="pull-hint">↓ pull down to refresh checks</div>
+  <div class="pull-hint">
+    <i data-feather="chevron-down" width="12" height="12"></i> Pull down to reset checks
+  </div>
 </div>
 
 <canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
@@ -537,9 +587,9 @@
   (function(){
     "use strict";
     // ---------- STATE & STORAGE ----------
-    const STORAGE_KEY = 'rawdog_tasks_v3';
-    const STREAK_KEY = 'rawdog_streak_v3';
-    const PREFS_KEY = 'rawdog_prefs_v3';
+    const STORAGE_KEY = 'rawdog_tasks_v4';
+    const STREAK_KEY = 'rawdog_streak_v4';
+    const PREFS_KEY = 'rawdog_prefs_v4';
     let tasks = [];
     let streak = 0;
     let lastCompletionDate = null;
@@ -607,7 +657,7 @@
       streakSpan.textContent = streak;
       const today = getToday();
       if(streak>0) streakContext.textContent = lastCompletionDate===today ? '· today' : `· ${streak} day streak`;
-      else streakContext.textContent = '';
+      else streakContext.textContent = '· start';
     }
     function evaluateStreak() {
       const today = getToday();
@@ -620,6 +670,8 @@
           streak = diff===1 ? streak+1 : 1;
         }
         lastCompletionDate = today; saveStreak();
+        // Simple confetti burst
+        startConfetti();
       }
       updateStreakUI();
     }
@@ -630,7 +682,10 @@
 
     function render() {
       if(tasks.length===0) {
-        checklistEl.innerHTML = `<li class="empty-state">No tasks yet.<br><span style="font-size:0.9rem;">Add something to get started.</span></li>`;
+        checklistEl.innerHTML = `<li class="empty-state">
+          <strong>No tasks yet.</strong><br>
+          <span style="font-size:0.9rem;">Add one to start building momentum.</span>
+        </li>`;
         updateProgress(); feather.replace(); return;
       }
       let html='';
@@ -638,10 +693,10 @@
         const checked = t.completed ? 'checked' : '';
         html+=`<li class="task-item ${t.completed?'completed':''}" data-id="${t.id}">
           <div class="checkbox-custom ${checked}" data-id="${t.id}"><i data-feather="check"></i></div>
-          <span class="task-content" contenteditable="true" data-id="${t.id}">${escapeHtml(t.text)}</span>
+          <span class="task-content" contenteditable="true" data-id="${t.id}" title="Click to edit">${escapeHtml(t.text)}</span>
           <div class="task-actions">
-            <span class="edit-icon" title="Click text to edit"><i data-feather="edit-2" width="16" height="16"></i></span>
-            <button class="delete-btn" data-id="${t.id}"><i data-feather="x" width="18" height="18"></i></button>
+            <span class="edit-icon"><i data-feather="edit-2" width="16" height="16"></i></span>
+            <button class="delete-btn" data-id="${t.id}" title="Delete task"><i data-feather="x" width="18" height="18"></i></button>
           </div>
         </li>`;
       });
@@ -674,11 +729,28 @@
       const pct = total ? Math.round(done/total*100) : 0;
       progressFill.style.width = pct+'%';
       progressPercent.textContent = pct+'%';
-      progressText.textContent = done===total&&total>0 ? 'All done' : `${done} of ${total} completed`;
+      progressText.textContent = done===total&&total>0 ? 'All done — great work!' : `${done} of ${total} completed`;
+    }
+
+    // Simple confetti (minimal)
+    function startConfetti() {
+      // No external lib; just a visual cue
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      // Quick burst
+      for(let i=0;i<30;i++) {
+        ctx.fillStyle = `hsl(${Math.random()*60 + 180}, 80%, 60%)`;
+        ctx.beginPath();
+        ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height*0.5, 5+Math.random()*8, 0, Math.PI*2);
+        ctx.fill();
+      }
+      setTimeout(() => ctx.clearRect(0,0,canvas.width,canvas.height), 800);
     }
 
     // Actions
-    function addTask(text) { if(!text.trim()) return; tasks.push({id:generateId(), text:text.trim(), completed:false}); saveTasks(); render(); newTaskInput.value=''; }
+    function addTask(text) { if(!text.trim()) return; tasks.push({id:generateId(), text:text.trim(), completed:false}); saveTasks(); render(); newTaskInput.value=''; newTaskInput.focus(); }
     function resetChecks() { if(tasks.some(t=>t.completed) && !confirm('Uncheck all tasks?')) return; tasks.forEach(t=>t.completed=false); saveTasks(); render(); }
     function clearAll() { if(tasks.length===0) return; lastDeletedTasks=[...tasks]; tasks=[]; saveTasks(); render(); showToast('Tasks cleared', ()=>{ tasks=lastDeletedTasks; saveTasks(); render(); }); }
     function showToast(msg, undo) {
@@ -688,9 +760,14 @@
       setTimeout(()=>toast.remove(), 5000);
     }
     function loadSample() { if(tasks.length && !confirm('Replace with sample tasks?')) return; tasks=[{id:generateId(),text:'Finish that thing',completed:false},{id:generateId(),text:'Drink water',completed:false},{id:generateId(),text:'Deep work 25 min',completed:false}]; saveTasks(); render(); }
-    function carryOver() { tasks.push({id:generateId(), text:'Yesterday\'s leftover', completed:false}); saveTasks(); render(); }
+    function carryOver() { 
+      const yesterdayTasks = tasks.filter(t=>!t.completed).map(t=>({...t, id: generateId(), completed: false}));
+      if(yesterdayTasks.length===0) { alert('No unfinished tasks to carry over.'); return; }
+      tasks.push(...yesterdayTasks); saveTasks(); render(); 
+      showToast(`Added ${yesterdayTasks.length} task(s)`, ()=>{ tasks = tasks.slice(0, -yesterdayTasks.length); saveTasks(); render(); });
+    }
     function exportData() { const blob=new Blob([JSON.stringify({tasks,streak,lastDate:lastCompletionDate})],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='rawdog_backup.json'; a.click(); }
-    function shareStreak() { if(navigator.share) navigator.share({title:'rawdog streak',text:`🔥 ${streak} day streak!`}); else alert(`🔥 ${streak} day streak!`); }
+    function shareStreak() { if(navigator.share) navigator.share({title:'rawdog streak',text:`🔥 ${streak} day streak on rawdog!`}); else alert(`🔥 ${streak} day streak!`); }
 
     // Init
     function init() {
@@ -706,12 +783,17 @@
       sampleBtn.addEventListener('click', loadSample);
       carryOverBtn.addEventListener('click', carryOver);
       themeToggleBtn.addEventListener('click', ()=>{ darkMode = !darkMode; applyTheme(); });
-      notifyBtn.addEventListener('click', ()=>{ if('Notification' in window) Notification.requestPermission(); });
+      notifyBtn.addEventListener('click', ()=>{ if('Notification' in window) { Notification.requestPermission().then(perm => { if(perm==='granted') alert('Reminders enabled (demo).'); }); } });
       exportBtn.addEventListener('click', exportData);
       shareStreakBtn.addEventListener('click', shareStreak);
       soundToggleBtn.addEventListener('click', ()=>{ soundEnabled=!soundEnabled; soundToggleBtn.innerHTML = soundEnabled ? '<i data-feather="volume-2"></i> Sound' : '<i data-feather="volume-x"></i> Mute'; feather.replace(); localStorage.setItem(PREFS_KEY, JSON.stringify({darkMode,soundEnabled})); });
       
       newTaskInput.addEventListener('keydown', e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) addTask(newTaskInput.value); if(e.key==='Escape') newTaskInput.value=''; });
+      
+      // Pull-to-refresh
+      let touchStartY = 0;
+      document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
+      document.addEventListener('touchmove', e => { if(window.scrollY===0 && e.touches[0].clientY - touchStartY > 70) { resetChecks(); } }, {passive: false});
       
       if('serviceWorker' in navigator) navigator.serviceWorker.register("data:application/javascript,self.addEventListener('fetch',()=>{});");
     }
