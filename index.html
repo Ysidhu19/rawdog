@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>rawdog · liquid glass</title>
+  <title>rawdog · focus</title>
   
-  <link rel="manifest" href="data:application/manifest+json,{name:'rawdog',short_name:'rawdog',theme_color:'%2306101a',background_color:'%2306101a',display:'standalone',scope:'/',start_url:'/'}">
-  <meta name="theme-color" content="#06101a">
+  <link rel="manifest" href="data:application/manifest+json,{name:'rawdog',short_name:'rawdog',theme_color:'%23f5f5f7',background_color:'%23f5f5f7',display:'standalone',scope:'/',start_url:'/'}">
+  <meta name="theme-color" content="#f5f5f7">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   
   <!-- Feather Icons -->
   <script src="https://unpkg.com/feather-icons"></script>
@@ -20,107 +20,59 @@
       box-sizing: border-box;
     }
 
-    /* Liquid animated background */
+    /* Apple system fonts */
     body {
-      --accent: #4f9cf7;
-      --accent-soft: #7ab7ff;
-      --accent-glow: rgba(79, 156, 247, 0.6);
-      --glass-bg: rgba(15, 30, 50, 0.25);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --text-primary: #ffffff;
-      --text-secondary: #b8d0e9;
+      --bg-color: #f5f5f7;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --accent: #007aff;
+      --accent-light: #e8f0fe;
+      --border-light: rgba(0, 0, 0, 0.04);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
+      --progress-bg: #e6e6e8;
+      --input-bg: rgba(255, 255, 255, 0.8);
+      --delete-hover: #ff3b30;
       
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif;
       padding: 1.5rem;
       margin: 0;
       color: var(--text-primary);
-      
-      /* Liquid animated gradient */
-      background: linear-gradient(-45deg, #07101a, #0a1929, #0d1f33, #071826);
-      background-size: 400% 400%;
-      animation: liquidMove 18s ease infinite;
-      position: relative;
-      overflow-x: hidden;
+      background: var(--bg-color);
+      transition: background 0.3s, color 0.2s;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Soft floating orbs for depth */
-    body::before {
-      content: '';
-      position: fixed;
-      width: 200%;
-      height: 200%;
-      top: -50%;
-      left: -50%;
-      background: radial-gradient(circle at 30% 40%, rgba(80, 160, 255, 0.08) 0%, transparent 40%),
-                  radial-gradient(circle at 80% 70%, rgba(140, 200, 255, 0.06) 0%, transparent 50%);
-      animation: orbFloat 25s infinite alternate ease-in-out;
-      pointer-events: none;
-      z-index: 0;
+    /* Dark mode */
+    body.dark {
+      --bg-color: #000000;
+      --card-bg: rgba(28, 28, 30, 0.9);
+      --text-primary: #ffffff;
+      --text-secondary: #98989e;
+      --border-light: rgba(255, 255, 255, 0.08);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+      --progress-bg: #3a3a3c;
+      --input-bg: rgba(44, 44, 46, 0.8);
     }
 
-    @keyframes liquidMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes orbFloat {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(-5%, -3%) scale(1.02); }
-    }
-
-    /* Light mode overrides */
-    body.light {
-      --glass-bg: rgba(255, 255, 255, 0.2);
-      --glass-border: rgba(255, 255, 255, 0.5);
-      --text-primary: #0a1622;
-      --text-secondary: #2c4e70;
-      background: linear-gradient(-45deg, #d9e9ff, #c2daf5, #e2f0ff, #c8defa);
-      background-size: 400% 400%;
-    }
-    body.light::before {
-      background: radial-gradient(circle at 30% 40%, rgba(100, 180, 255, 0.15) 0%, transparent 40%),
-                  radial-gradient(circle at 80% 70%, rgba(180, 220, 255, 0.1) 0%, transparent 50%);
-    }
-
-    /* Main card – liquid glass */
+    /* Main card – Apple style */
     .app-card {
-      max-width: 740px;
+      max-width: 680px;
       width: 100%;
-      background: var(--glass-bg);
+      background: var(--card-bg);
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 56px;
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4),
-                  0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-                  0 0 30px rgba(79, 156, 247, 0.2) inset;
-      padding: 2.5rem 2.2rem;
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
-      animation: cardFloat 6s infinite alternate ease-in-out;
-      position: relative;
-      z-index: 10;
-    }
-
-    @keyframes cardFloat {
-      0% { transform: translateY(0px); }
-      100% { transform: translateY(-6px); }
-    }
-
-    /* Glossy highlight edge */
-    .app-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      border-radius: 56px 56px 0 0;
-      pointer-events: none;
+      border-radius: 32px;
+      box-shadow: var(--shadow-md);
+      padding: 2.5rem 2rem;
+      transition: box-shadow 0.3s ease;
+      border: 0.5px solid var(--border-light);
     }
 
     /* Header */
@@ -128,41 +80,38 @@
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     h1 {
+      font-weight: 600;
+      font-size: 2.6rem;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
       display: flex;
       align-items: baseline;
-      gap: 0.3rem;
-      font-weight: 700;
-      font-size: 2.9rem;
-      letter-spacing: -0.03em;
-      color: white;
-      text-shadow: 0 4px 20px rgba(0, 80, 160, 0.5);
-    }
-    body.light h1 {
-      color: #0a1e32;
-      text-shadow: 0 2px 12px rgba(0,100,200,0.15);
+      gap: 0.2rem;
     }
     .rawdog-emoji {
-      font-size: 2.5rem;
-      margin-left: 6px;
-      filter: drop-shadow(0 0 8px var(--accent-glow));
+      font-size: 2.2rem;
+      margin-left: 4px;
     }
 
     .badge {
-      background: rgba(30, 70, 120, 0.3);
-      backdrop-filter: blur(10px);
-      padding: 0.3rem 1.2rem;
+      background: var(--accent-light);
+      padding: 0.25rem 1rem;
       border-radius: 40px;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #b8d6ff;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      border: none;
+      backdrop-filter: none;
+    }
+    body.dark .badge {
+      background: rgba(0, 122, 255, 0.15);
+      color: #3a9cff;
     }
 
     /* Status row */
@@ -170,70 +119,59 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.8rem;
-      padding-left: 0.3rem;
+      margin-bottom: 2rem;
     }
     .greeting {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 400;
       color: var(--text-secondary);
-      border-left: 4px solid var(--accent);
-      padding-left: 1rem;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .streak-pill {
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(20, 45, 75, 0.4);
-      backdrop-filter: blur(10px);
-      padding: 0.5rem 1.3rem;
-      border-radius: 40px;
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      gap: 8px;
+      background: transparent;
+      padding: 0.3rem 0;
+      font-weight: 500;
     }
     .streak-number {
-      font-weight: 700;
-      font-size: 1.4rem;
-      color: #ffdb7c;
-      text-shadow: 0 0 8px #ffb34780;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+    .streak-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
     }
 
-    /* Progress bar – glossy */
+    /* Progress bar – thin line */
     .progress-section {
-      margin: 0.5rem 0 2rem;
+      margin-bottom: 2rem;
     }
     .progress-header {
       display: flex;
       justify-content: space-between;
       font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
+      font-weight: 500;
       color: var(--text-secondary);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
     }
     .progress-track {
-      height: 10px;
-      background: rgba(10, 25, 45, 0.5);
-      backdrop-filter: blur(5px);
-      border-radius: 20px;
+      height: 4px;
+      background: var(--progress-bg);
+      border-radius: 4px;
       overflow: hidden;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);
     }
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #3b9eff, #7ab9ff);
-      border-radius: 20px;
-      box-shadow: 0 0 16px var(--accent-glow);
-      transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
-    }
-    .progress-fill.completed {
-      background: linear-gradient(90deg, #2ecc71, #58d68d);
-      box-shadow: 0 0 18px #2ecc71aa;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
     }
 
-    /* Checklist – glass items */
+    /* Checklist – clean items */
     .checklist {
       list-style: none;
       margin: 0.5rem 0 2rem;
@@ -242,48 +180,38 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 1rem 0.8rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      transition: background 0.2s;
-      border-radius: 24px;
+      padding: 0.9rem 0.4rem;
+      border-bottom: 0.5px solid var(--border-light);
+      transition: background 0.15s;
     }
-    .task-item:hover {
-      background: rgba(255, 255, 255, 0.03);
+    .task-item:last-child {
+      border-bottom: none;
     }
 
-    /* Custom checkbox – liquid fill */
+    /* Apple‑style checkbox */
     .checkbox-custom {
       flex-shrink: 0;
-      width: 28px;
-      height: 28px;
-      background: rgba(15, 35, 60, 0.4);
-      backdrop-filter: blur(8px);
-      border-radius: 10px;
-      border: 2px solid rgba(120, 180, 255, 0.5);
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border-radius: 6px;
+      border: 2px solid var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.2,0.9,0.4,1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05) inset;
-    }
-    .checkbox-custom:hover {
-      border-color: var(--accent);
-      transform: scale(1.08);
-      background: rgba(79, 156, 247, 0.2);
+      transition: all 0.15s ease;
     }
     .checkbox-custom.checked {
       background: var(--accent);
       border-color: var(--accent);
-      box-shadow: 0 0 22px var(--accent-glow), 0 0 0 1px rgba(255,255,255,0.2) inset;
     }
     .checkbox-custom svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       stroke: white;
       stroke-width: 3;
       display: none;
-      filter: drop-shadow(0 2px 3px black);
     }
     .checkbox-custom.checked svg {
       display: block;
@@ -291,8 +219,8 @@
 
     .task-content {
       flex: 1;
-      font-size: 1.2rem;
-      font-weight: 500;
+      font-size: 1.15rem;
+      font-weight: 400;
       background: transparent;
       border: none;
       outline: none;
@@ -300,39 +228,43 @@
       padding: 0.2rem 0;
       transition: color 0.2s;
       word-break: break-word;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     .task-content:focus {
-      border-bottom: 2px dashed var(--accent);
+      border-bottom: 1.5px solid var(--accent);
     }
     .task-item.completed .task-content {
       text-decoration: line-through;
-      color: #8da6c9;
+      color: var(--text-secondary);
     }
 
     .task-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
     .edit-icon {
-      opacity: 0.5;
-      transition: 0.2s;
+      opacity: 0.4;
+      transition: opacity 0.2s;
       cursor: pointer;
+      color: var(--text-secondary);
     }
-    .edit-icon:hover { opacity: 1; }
+    .edit-icon:hover { opacity: 0.8; }
     .delete-btn {
       background: none;
       border: none;
-      color: #8da6c9;
+      color: var(--text-secondary);
       cursor: pointer;
-      padding: 8px;
+      padding: 6px;
       border-radius: 30px;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.5;
     }
     .delete-btn:hover {
-      color: #ff8a7a;
-      background: rgba(255, 100, 100, 0.15);
+      opacity: 1;
+      color: var(--delete-hover);
     }
 
     /* Empty state */
@@ -340,60 +272,77 @@
       padding: 2.5rem 0.5rem;
       text-align: center;
       color: var(--text-secondary);
-      font-style: italic;
-      opacity: 0.8;
+      font-size: 1rem;
     }
 
     /* Add section */
     .add-section {
       display: flex;
       gap: 0.8rem;
-      margin: 1.2rem 0 2.2rem;
+      margin: 1rem 0 2rem;
     }
     .add-input {
       flex: 1;
-      background: rgba(10, 25, 45, 0.3);
-      backdrop-filter: blur(12px);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
-      border-radius: 60px;
-      padding: 1.1rem 1.8rem;
+      background: var(--input-bg);
+      backdrop-filter: blur(10px);
+      border: 0.5px solid var(--border-light);
+      border-radius: 16px;
+      padding: 1rem 1.2rem;
       font-size: 16px;
       color: var(--text-primary);
       outline: none;
       transition: border 0.2s, box-shadow 0.2s;
-      box-shadow: inset 0 6px 10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05);
+      font-weight: 400;
     }
     .add-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(79, 156, 247, 0.3), inset 0 4px 8px #00000033;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+    .add-input::placeholder {
+      color: var(--text-secondary);
     }
 
     .btn {
-      background: rgba(30, 70, 120, 0.45);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: var(--accent);
+      border: none;
       color: white;
-      font-weight: 600;
-      padding: 1rem 2rem;
-      border-radius: 60px;
+      font-weight: 500;
+      padding: 1rem 1.8rem;
+      border-radius: 40px;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.25s;
-      box-shadow: 0 10px 18px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       white-space: nowrap;
+      box-shadow: none;
+      letter-spacing: -0.01em;
     }
     .btn:hover {
-      background: #2a6090;
-      border-color: var(--accent);
-      box-shadow: 0 12px 24px #00000055, 0 0 16px var(--accent-glow);
-      transform: translateY(-2px);
+      background: #005bbf;
+      transform: scale(1.02);
     }
+    body.dark .btn {
+      background: #0a84ff;
+    }
+    body.dark .btn:hover {
+      background: #0066d9;
+    }
+
     .btn-secondary {
       background: transparent;
-      box-shadow: none;
+      color: var(--accent);
+      padding: 0.6rem 1.2rem;
+      border: 0.5px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary:hover {
+      background: rgba(0, 122, 255, 0.05);
+      transform: scale(1.01);
+    }
+    body.dark .btn-secondary {
+      color: #3a9cff;
     }
 
     .action-bar {
@@ -409,13 +358,13 @@
 
     /* Footer */
     .footer-bar {
-      margin-top: 2.2rem;
+      margin-top: 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 0.75rem;
       color: var(--text-secondary);
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 0.5px solid var(--border-light);
       padding-top: 1.2rem;
     }
     .footer-actions button {
@@ -424,8 +373,13 @@
       color: var(--text-secondary);
       font-size: 0.75rem;
       cursor: pointer;
-      text-decoration: underline dotted;
+      text-decoration: none;
       opacity: 0.8;
+      padding: 0 4px;
+    }
+    .footer-actions button:hover {
+      opacity: 1;
+      color: var(--accent);
     }
 
     .toast-message {
@@ -433,18 +387,33 @@
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 35, 60, 0.8);
+      background: var(--card-bg);
       backdrop-filter: blur(20px);
-      color: white;
-      padding: 12px 28px;
-      border-radius: 60px;
-      box-shadow: 0 20px 40px #00000066;
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: 40px;
+      box-shadow: var(--shadow-md);
       z-index: 999;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 0.5px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .toast-message button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-weight: 500;
+      cursor: pointer;
     }
 
-    canvas { display: block; }
-    .pull-hint { text-align: center; margin-top: 8px; opacity: 0.4; }
+    .pull-hint {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -477,28 +446,28 @@
 
   <div class="add-section">
     <input type="text" id="newTaskInput" class="add-input" placeholder="What are you avoiding?" autocomplete="off" />
-    <button class="btn" id="addTaskBtn"><i data-feather="plus-circle"></i> add</button>
+    <button class="btn" id="addTaskBtn"><i data-feather="plus"></i> Add</button>
   </div>
 
   <div class="action-bar">
     <div class="action-group">
-      <button class="btn btn-secondary" id="resetDailyBtn"><i data-feather="rotate-ccw"></i> reset</button>
-      <button class="btn btn-secondary" id="clearAllBtn"><i data-feather="trash-2"></i> clear</button>
-      <button class="btn btn-secondary" id="carryOverBtn"><i data-feather="calendar"></i> carry</button>
+      <button class="btn btn-secondary" id="resetDailyBtn"><i data-feather="rotate-ccw"></i> Reset</button>
+      <button class="btn btn-secondary" id="clearAllBtn"><i data-feather="trash-2"></i> Clear</button>
+      <button class="btn btn-secondary" id="carryOverBtn"><i data-feather="calendar"></i> Carry</button>
     </div>
     <div class="action-group">
-      <button class="btn btn-secondary" id="sampleTasksBtn"><i data-feather="list"></i> sample</button>
-      <button class="btn btn-secondary" id="themeToggleBtn"><i data-feather="sun"></i> theme</button>
-      <button class="btn btn-secondary" id="notifyBtn"><i data-feather="bell"></i> remind</button>
+      <button class="btn btn-secondary" id="sampleTasksBtn"><i data-feather="list"></i> Sample</button>
+      <button class="btn btn-secondary" id="themeToggleBtn"><i data-feather="moon"></i> Dark</button>
+      <button class="btn btn-secondary" id="notifyBtn"><i data-feather="bell"></i> Remind</button>
     </div>
   </div>
 
   <div class="footer-bar">
-    <span>rawdog · liquid glass</span>
+    <span>rawdog · focus</span>
     <div class="footer-actions">
-      <button id="exportDataBtn"><i data-feather="download" width="14" height="14"></i> export</button>
-      <button id="shareStreakBtn"><i data-feather="share-2" width="14" height="14"></i> share</button>
-      <button id="soundToggleBtn"><i data-feather="volume-2" width="14" height="14"></i> sound</button>
+      <button id="exportDataBtn"><i data-feather="download" width="14" height="14"></i> Export</button>
+      <button id="shareStreakBtn"><i data-feather="share-2" width="14" height="14"></i> Share</button>
+      <button id="soundToggleBtn"><i data-feather="volume-2" width="14" height="14"></i> Sound</button>
     </div>
   </div>
   <div class="pull-hint">↓ pull down to refresh checks</div>
@@ -510,14 +479,14 @@
   (function(){
     "use strict";
     // ---------- STATE & STORAGE ----------
-    const STORAGE_KEY = 'rawdog_tasks';
-    const STREAK_KEY = 'rawdog_streak';
-    const PREFS_KEY = 'rawdog_prefs';
+    const STORAGE_KEY = 'rawdog_tasks_v2';
+    const STREAK_KEY = 'rawdog_streak_v2';
+    const PREFS_KEY = 'rawdog_prefs_v2';
     let tasks = [];
     let streak = 0;
     let lastCompletionDate = null;
     let soundEnabled = true;
-    let theme = 'dark';
+    let darkMode = false;
     let lastDeletedTasks = null;
     let audioCtx = null;
 
@@ -540,7 +509,6 @@
     const progressPercent = document.getElementById('progressPercent');
     const progressText = document.getElementById('progressText');
     const greetingMsg = document.getElementById('greetingMsg');
-    const confettiCanvas = document.getElementById('confettiCanvas');
 
     // Utils
     function generateId() { return Date.now() + '-' + Math.random().toString(36).substr(2,9); }
@@ -548,13 +516,14 @@
     function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
     function updateGreeting() {
       const h = new Date().getHours();
-      greetingMsg.textContent = h<12 ? 'morning grind' : (h<18 ? 'afternoon push' : 'night shift');
+      greetingMsg.textContent = h<12 ? 'Good morning' : (h<18 ? 'Good afternoon' : 'Good evening');
     }
 
     // Theme
     function applyTheme() {
-      document.body.classList.toggle('light', theme === 'light');
-      localStorage.setItem(PREFS_KEY, JSON.stringify({ theme, soundEnabled }));
+      document.body.classList.toggle('dark', darkMode);
+      themeToggleBtn.innerHTML = darkMode ? '<i data-feather="sun"></i> Light' : '<i data-feather="moon"></i> Dark';
+      localStorage.setItem(PREFS_KEY, JSON.stringify({ darkMode, soundEnabled }));
       feather.replace();
     }
 
@@ -579,8 +548,8 @@
     function updateStreakUI() {
       streakSpan.textContent = streak;
       const today = getToday();
-      if(streak>0) streakContext.textContent = lastCompletionDate===today ? '🔥 today' : `${streak} day streak`;
-      else streakContext.textContent = 'start';
+      if(streak>0) streakContext.textContent = lastCompletionDate===today ? '· today' : `· ${streak} day streak`;
+      else streakContext.textContent = '';
     }
     function evaluateStreak() {
       const today = getToday();
@@ -593,7 +562,7 @@
           streak = diff===1 ? streak+1 : 1;
         }
         lastCompletionDate = today; saveStreak();
-        if(allDone) startConfetti();
+        // confetti could go here
       }
       updateStreakUI();
     }
@@ -604,7 +573,7 @@
 
     function render() {
       if(tasks.length===0) {
-        checklistEl.innerHTML = `<li class="empty-state">rawdog empty.<div style="margin-top:8px;font-size:0.9rem;">what's the one thing you're avoiding?</div></li>`;
+        checklistEl.innerHTML = `<li class="empty-state">No tasks yet.<br><span style="font-size:0.9rem;">Add something to get started.</span></li>`;
         updateProgress(); feather.replace(); return;
       }
       let html='';
@@ -614,8 +583,8 @@
           <div class="checkbox-custom ${checked}" data-id="${t.id}"><i data-feather="check"></i></div>
           <span class="task-content" contenteditable="true" data-id="${t.id}">${escapeHtml(t.text)}</span>
           <div class="task-actions">
-            <span class="edit-icon" title="click text to edit"><i data-feather="edit-2" width="16" height="16"></i></span>
-            <button class="delete-btn" data-id="${t.id}"><i data-feather="x" width="20" height="20"></i></button>
+            <span class="edit-icon" title="Click text to edit"><i data-feather="edit-2" width="16" height="16"></i></span>
+            <button class="delete-btn" data-id="${t.id}"><i data-feather="x" width="18" height="18"></i></button>
           </div>
         </li>`;
       });
@@ -648,13 +617,7 @@
       const pct = total ? Math.round(done/total*100) : 0;
       progressFill.style.width = pct+'%';
       progressPercent.textContent = pct+'%';
-      progressText.textContent = done===total&&total>0 ? 'all done! 💪' : `${done}/${total} completed`;
-      progressFill.classList.toggle('completed', done===total&&total>0);
-    }
-
-    function startConfetti() {
-      confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight;
-      // (optional full confetti lib could be added)
+      progressText.textContent = done===total&&total>0 ? 'All done' : `${done} of ${total} completed`;
     }
 
     // Actions
@@ -667,8 +630,8 @@
       toast.querySelector('button').onclick=()=>{ undo(); toast.remove(); };
       setTimeout(()=>toast.remove(), 5000);
     }
-    function loadSample() { if(tasks.length && !confirm('Replace with sample?')) return; tasks=[{id:generateId(),text:'Finish that thing',completed:false},{id:generateId(),text:'Drink water',completed:false},{id:generateId(),text:'Deep work 25min',completed:false}]; saveTasks(); render(); }
-    function carryOver() { tasks.push({id:generateId(), text:'yesterday\'s leftover', completed:false}); saveTasks(); render(); }
+    function loadSample() { if(tasks.length && !confirm('Replace with sample tasks?')) return; tasks=[{id:generateId(),text:'Finish that thing',completed:false},{id:generateId(),text:'Drink water',completed:false},{id:generateId(),text:'Deep work 25 min',completed:false}]; saveTasks(); render(); }
+    function carryOver() { tasks.push({id:generateId(), text:'Yesterday\'s leftover', completed:false}); saveTasks(); render(); }
     function exportData() { const blob=new Blob([JSON.stringify({tasks,streak,lastDate:lastCompletionDate})],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='rawdog_backup.json'; a.click(); }
     function shareStreak() { if(navigator.share) navigator.share({title:'rawdog streak',text:`🔥 ${streak} day streak!`}); else alert(`🔥 ${streak} day streak!`); }
 
@@ -676,7 +639,7 @@
     function init() {
       loadTasks(); loadStreak();
       const prefs = JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');
-      theme = prefs.theme||'dark'; soundEnabled = prefs.soundEnabled!==false;
+      darkMode = prefs.darkMode || false; soundEnabled = prefs.soundEnabled !== false;
       applyTheme(); updateGreeting(); render();
       feather.replace();
       
@@ -685,11 +648,11 @@
       clearAllBtn.addEventListener('click', clearAll);
       sampleBtn.addEventListener('click', loadSample);
       carryOverBtn.addEventListener('click', carryOver);
-      themeToggleBtn.addEventListener('click', ()=>{ theme = theme==='dark'?'light':'dark'; applyTheme(); });
+      themeToggleBtn.addEventListener('click', ()=>{ darkMode = !darkMode; applyTheme(); });
       notifyBtn.addEventListener('click', ()=>{ if('Notification' in window) Notification.requestPermission(); });
       exportBtn.addEventListener('click', exportData);
       shareStreakBtn.addEventListener('click', shareStreak);
-      soundToggleBtn.addEventListener('click', ()=>{ soundEnabled=!soundEnabled; soundToggleBtn.innerHTML = soundEnabled ? '<i data-feather="volume-2"></i> sound' : '<i data-feather="volume-x"></i> mute'; feather.replace(); localStorage.setItem(PREFS_KEY, JSON.stringify({theme,soundEnabled})); });
+      soundToggleBtn.addEventListener('click', ()=>{ soundEnabled=!soundEnabled; soundToggleBtn.innerHTML = soundEnabled ? '<i data-feather="volume-2"></i> Sound' : '<i data-feather="volume-x"></i> Mute'; feather.replace(); localStorage.setItem(PREFS_KEY, JSON.stringify({darkMode,soundEnabled})); });
       
       newTaskInput.addEventListener('keydown', e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) addTask(newTaskInput.value); if(e.key==='Escape') newTaskInput.value=''; });
       
