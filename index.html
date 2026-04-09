@@ -1,165 +1,507 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>RAWDOG Tactical</title>
-
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Orbitron Font for tactical HUD -->
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-
-<!-- React CDN -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-<style>
-  body {
-    background-color: #0a0a0a;
-    font-family: 'Orbitron', sans-serif;
-    color: #e0e0e0;
-  }
-  .task-completed {
-    text-decoration: line-through;
-    color: #555;
-  }
-  .alert {
-    animation: flash 0.3s ease 0s 4;
-  }
-  @keyframes flash {
-    0%,100%{opacity:1}
-    50%{opacity:0.1}
-  }
-  .hud-button:hover {
-    box-shadow: 0 0 10px #ff0000;
-  }
-</style>
-</head>
-
-<body class="flex justify-center items-start p-8 min-h-screen">
-<div id="root" class="w-full max-w-md"></div>
-
-<script type="text/javascript">
-const { useState, useEffect } = React;
-
-function App() {
-  // Tasks
-  const [tasks, setTasks] = useState(JSON.parse(localStorage.getItem("rawdogTasks")) || []);
-  const [input, setInput] = useState("");
-
-  // Timer
-  const [seconds, setSeconds] = useState(50*60);
-  const [running, setRunning] = useState(false);
-
-  // Streak
-  const [streak, setStreak] = useState(parseInt(localStorage.getItem("rawdogStreak"))||0);
-
-  // Alert
-  const [alert, setAlert] = useState("");
-
-  // Timer effect
-  useEffect(()=>{
-    let timer;
-    if(running){
-      timer=setInterval(()=>{
-        setSeconds(prev=>{
-          if(prev<=1){
-            setRunning(false);
-            incompleteMissionAlert();
-            return 0;
-          }
-          return prev-1;
-        });
-      },1000);
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>rawdog · anti‑procrastination checklist</title>
+  <!-- minimalist, bold, no‑nonsense vibe -->
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    return ()=>clearInterval(timer);
-  },[running]);
 
-  // LocalStorage & streak
-  useEffect(()=>{
-    localStorage.setItem("rawdogTasks", JSON.stringify(tasks));
-    const allComplete = tasks.length>0 && tasks.every(t=>t.completed);
-    if(allComplete) setStreak(prev=>prev+1);
-    else if(tasks.some(t=>!t.completed)) setStreak(0);
-    localStorage.setItem("rawdogStreak", streak);
-  },[tasks]);
+    body {
+      background: #0b0e14;
+      background-image: radial-gradient(circle at 20% 30%, #1a1f2c 0%, #080b10 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 1.5rem;
+      margin: 0;
+      color: #eef3fc;
+    }
 
-  // Helpers
-  const addTask=(title)=>{
-    if(!title.trim()) return;
-    setTasks([...tasks,{id:Date.now(),title,completed:false}]);
-    setInput("");
-  }
-  const toggleTask=(id)=>setTasks(tasks.map(t=>t.id===id?{...t,completed:!t.completed}:t));
-  const deleteTask=(id)=>setTasks(tasks.filter(t=>t.id!==id));
-  const formatTime=(sec)=>{
-    const m=Math.floor(sec/60), s=sec%60;
-    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-  }
+    .app-card {
+      max-width: 700px;
+      width: 100%;
+      background: rgba(18, 24, 34, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(80, 140, 220, 0.18);
+      border-radius: 36px;
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 180, 255, 0.1) inset;
+      padding: 2.2rem 1.8rem;
+      transition: all 0.2s ease;
+    }
 
-  const incompleteMissionAlert=()=>{
-    setAlert("MISSION FAILED");
-    setTimeout(()=>setAlert(""),2000);
-  }
+    h1 {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 2.6rem;
+      line-height: 1.1;
+      margin-bottom: 0.2rem;
+      color: #ffffff;
+      text-shadow: 0 2px 5px rgba(0, 20, 40, 0.6);
+    }
 
-  return React.createElement('div',{className:"flex flex-col items-center w-full"},
-    // Title
-    React.createElement('h1',{className:"text-5xl font-bold text-red-600 uppercase mb-4"}, "RAWDOG"),
-    
-    // Alert
-    alert && React.createElement('div',{className:"bg-red-700 w-full text-center p-2 font-bold mb-4 alert uppercase text-lg"}, alert),
+    .rawdog-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
 
-    // Timer HUD
-    React.createElement('div',{className:"mb-6 text-center"},
-      React.createElement('div',{className:"text-4xl font-bold tracking-widest text-white mb-2"}, formatTime(seconds)),
-      React.createElement('button',{
-        onClick: ()=>setRunning(!running),
-        className:"hud-button mt-2 px-4 py-2 bg-gray-800 uppercase font-bold text-white border border-red-700"
-      }, running ? "Abort" : "Commence")
-    ),
+    .rawdog-badge {
+      background: #1e3a5f;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aad0ff;
+      border: 1px solid #2e5580;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
 
-    // Task Input
-    React.createElement('div',{className:"flex w-full mb-4"},
-      React.createElement('input',{
-        className:"flex-grow p-2 text-black bg-gray-800 border border-gray-600 uppercase font-bold",
-        placeholder:"DEPLOY MISSION...",
-        value: input,
-        onChange:e=>setInput(e.target.value)
-      }),
-      React.createElement('button',{
-        onClick:()=>addTask(input),
-        className:"hud-button bg-red-800 p-2 uppercase font-bold text-white border border-red-700"
-      },"DEPLOY")
-    ),
+    .subhead {
+      font-size: 1rem;
+      margin-bottom: 1.8rem;
+      color: #a1bbdd;
+      font-weight: 400;
+      border-left: 4px solid #2d7aff;
+      padding-left: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-    // Task List
-    React.createElement('div',{className:"w-full"},
-      tasks.map(task =>
-        React.createElement('div',{
-          key: task.id,
-          className:"flex justify-between items-center bg-gray-900 p-3 mb-2 border-l-4 border-red-700 uppercase font-bold"
-        },
-          React.createElement('div',{
-            onClick:()=>toggleTask(task.id),
-            className:task.completed?"task-completed flex-grow cursor-pointer":"flex-grow cursor-pointer"
-          }, task.title),
-          React.createElement('button',{
-            onClick:()=>deleteTask(task.id),
-            className:"text-red-700 font-bold ml-2"
-          },"X")
-        )
-      )
-    ),
+    .streak-counter {
+      background: #101a26;
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid #254a6e;
+      color: #cddfff;
+    }
 
-    // Streak HUD
-    React.createElement('div',{className:"mt-6 text-xl font-bold text-white tracking-wide uppercase"},"STREAK: "+streak+" — KEEP FIGHTING")
-  );
-}
+    .streak-counter span {
+      font-weight: 700;
+      color: #ffd966;
+      margin-left: 6px;
+      font-size: 1.2rem;
+    }
 
-// Render
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(App));
-</script>
-</body>
-</html>
+    /* checklist */
+    .checklist {
+      list-style: none;
+      margin: 1.8rem 0 2rem;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.9rem 0.5rem 0.9rem 0.2rem;
+      border-bottom: 1px solid rgba(70, 120, 180, 0.25);
+      transition: background 0.15s;
+    }
+
+    .task-item:last-of-type {
+      border-bottom: none;
+    }
+
+    .task-check {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      accent-color: #1e90ff;
+      cursor: pointer;
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 6px #1e90ff55);
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 1.2rem;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e5edf5;
+      padding: 0.25rem 0;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+
+    .task-text:focus {
+      border-bottom: 1px dashed #3f8cff;
+    }
+
+    /* completed style */
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: #7e95b0;
+      font-weight: 400;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #6d8db0;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 20px;
+      opacity: 0.6;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+      color: #ff7b72;
+      background: #2a1e2a;
+      transform: scale(1.1);
+    }
+
+    /* add task area */
+    .add-section {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .add-input {
+      flex: 1;
+      background: #0d1622;
+      border: 1.5px solid #264b70;
+      border-radius: 60px;
+      padding: 0.9rem 1.3rem;
+      font-size: 1.1rem;
+      color: #f0f6ff;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+      font-weight: 400;
+      box-shadow: inset 0 4px 8px #00000022;
+    }
+
+    .add-input:focus {
+      border-color: #3f8cff;
+      box-shadow: 0 0 0 3px #1e4f8a55, inset 0 2px 6px #000;
+    }
+
+    .add-input::placeholder {
+      color: #6585a8;
+      font-weight: 300;
+      font-size: 1rem;
+    }
+
+    .btn {
+      background: #1e3f60;
+      border: 1px solid #2e6090;
+      color: #e3f0ff;
+      font-weight: 600;
+      padding: 0.9rem 1.6rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 12px #00000033, 0 1px 2px #5f9eff33 inset;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #265b88;
+      border-color: #3f8cff;
+      box-shadow: 0 8px 16px #00000055, 0 0 8px #2d7aff;
+      transform: translateY(-1px);
+      color: white;
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 6px #000;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #3b5f82;
+      box-shadow: none;
+      color: #b8d0e9;
+    }
+
+    .btn-secondary:hover {
+      background: #1a3147;
+      border-color: #5f8dc9;
+      box-shadow: 0 2px 10px #00000040;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: space-between;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .reset-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .progress-container {
+      margin: 0.5rem 0 1.2rem;
+      height: 8px;
+      background: #0f1a26;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #203d58;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #1e90ff, #5bb2ff);
+      border-radius: 20px;
+      box-shadow: 0 0 10px #1e90ffaa;
+      transition: width 0.25s ease;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #9db9d6;
+      margin-bottom: 6px;
+    }
+
+    .footer-note {
+      margin-top: 1.2rem;
+      text-align: right;
+      font-size: 0.75rem;
+      color: #6a85a2;
+      border-top: 1px dashed #2c4868;
+      padding-top: 1rem;
+    }
+
+    .github-note {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+<div class="app-card">
+  <div class="rawdog-title">
+    <h1>
+      rawdog
+      <span style="font-weight: 300; font-size: 1.8rem; margin-left: 6px; color: #9cb9e0;">⚡</span>
+    </h1>
+    <div class="rawdog-badge">NO EXCUSES</div>
+  </div>
+
+  <div class="subhead">
+    <span>complete the checklist. no bs.</span>
+    <div class="streak-counter" id="streakDisplay">
+      🔥 streak <span id="streakValue">0</span>
+    </div>
+  </div>
+
+  <!-- progress bar -->
+  <div class="progress-label">
+    <span id="progressText">get it done</span>
+    <span id="progressPercent">0%</span>
+  </div>
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+  </div>
+
+  <!-- dynamic checklist -->
+  <ul class="checklist" id="checklistContainer">
+    <!-- tasks will be injected via js -->
+  </ul>
+
+  <!-- add task -->
+  <div class="add-section">
+    <input type="text" id="newTaskInput" class="add-input" placeholder="e.g., finish that thing you're avoiding" autocomplete="off" />
+    <button class="btn" id="addTaskBtn">＋ add</button>
+  </div>
+
+  <!-- actions: reset daily / clear all / sample -->
+  <div class="action-bar">
+    <div class="reset-group">
+      <button class="btn btn-secondary" id="resetDailyBtn" title="Uncheck all tasks (keep list)">↻ reset checks</button>
+      <button class="btn btn-secondary" id="clearAllBtn" title="Delete all tasks">🗑 clear all</button>
+    </div>
+    <button class="btn btn-secondary" id="sampleTasksBtn">📋 load sample</button>
+  </div>
+
+  <div class="footer-note">
+    <span class="github-note">rawdog · anti‑procrastination // upload ready for github</span>
+  </div>
+</div>
+
+<script>
+  (function() {
+    "use strict";
+
+    // ---------- STORAGE ----------
+    const STORAGE_KEY = 'rawdog_tasks';
+    const STREAK_KEY = 'rawdog_streak';
+
+    // ---------- GLOBAL STATE ----------
+    let tasks = [];                 // { id: string, text: string, completed: boolean }
+    let streak = 0;
+    let lastCompletionDate = null;  // YYYY-MM-DD
+
+    // DOM elements
+    const checklistEl = document.getElementById('checklistContainer');
+    const newTaskInput = document.getElementById('newTaskInput');
+    const addBtn = document.getElementById('addTaskBtn');
+    const resetDailyBtn = document.getElementById('resetDailyBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const sampleBtn = document.getElementById('sampleTasksBtn');
+    const streakSpan = document.getElementById('streakValue');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressText = document.getElementById('progressText');
+
+    // ---------- UTILS ----------
+    function generateId() {
+      return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // get today as YYYY-MM-DD
+    function getTodayString() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // ---------- STREAK LOGIC (simple, daily reset) ----------
+    function loadStreakFromStorage() {
+      try {
+        const saved = localStorage.getItem(STREAK_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          streak = data.streak || 0;
+          lastCompletionDate = data.lastDate || null;
+        } else {
+          streak = 0;
+          lastCompletionDate = null;
+        }
+      } catch (e) {
+        console.warn("streak load error", e);
+        streak = 0;
+        lastCompletionDate = null;
+      }
+      updateStreakDisplay();
+    }
+
+    function saveStreakToStorage() {
+      const data = { streak, lastDate: lastCompletionDate };
+      localStorage.setItem(STREAK_KEY, JSON.stringify(data));
+    }
+
+    // call this whenever tasks change and might affect "all completed"
+    function evaluateAndUpdateStreak() {
+      const today = getTodayString();
+      const allCompleted = tasks.length > 0 && tasks.every(t => t.completed === true);
+
+      if (!allCompleted) {
+        // streak only advances when everything is checked; but we don't reset streak if not all completed.
+        // we only increment if today hasn't been recorded yet.
+        updateStreakDisplay();
+        return;
+      }
+
+      // all tasks completed! 
+      if (lastCompletionDate !== today) {
+        // new day streak increase
+        if (lastCompletionDate === null) {
+          streak = 1;
+        } else {
+          // check if lastCompletionDate was yesterday? we want consecutive days.
+          const lastDate = new Date(lastCompletionDate);
+          const todayDate = new Date(today);
+          const diffTime = todayDate - lastDate;
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            streak += 1;
+          } else if (diffDays > 1) {
+            streak = 1;   // broke streak
+          } else if (diffDays === 0) {
+            // already recorded today, do nothing
+          } else {
+            // negative diff shouldn't happen normally
+            streak = 1;
+          }
+        }
+        lastCompletionDate = today;
+        saveStreakToStorage();
+      }
+      updateStreakDisplay();
+    }
+
+    function updateStreakDisplay() {
+      streakSpan.textContent = streak;
+    }
+
+    // ---------- TASKS STORAGE ----------
+    function loadTasks() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          tasks = JSON.parse(stored);
+          // basic validation: ensure each task has id, text, completed
+          tasks = tasks.filter(t => t && typeof t === 'object' && 'id' in t && 'text' in t && 'completed' in t);
+        } else {
+          // default tasks (empty but can seed if we want)
+          tasks = [];
+        }
+      } catch (e) {
+        console.warn("tasks load error", e);
+        tasks = [];
+      }
+      
+      // guarantee tasks array
+      if (!Array.isArray(tasks)) tasks = [];
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    // ---------- RENDER + PROGRESS ----------
+    function renderChecklist() {
+      if (!checklistEl) return;
+      
+      if (tasks.length === 0) {
+        checklistEl.innerHTML = `<li style="padding: 1.5rem 0.5rem; text-align: center; color: #6d8db0; font-style: italic; border-bottom: none;">rawdog empty. add a task.</li>`;
+        updateProgress();
+        return;
+      }
+
+      let html = '';
+      tasks.forEach(task => {
+        const completedClass = task.completed ? 'completed' : '';
+        const checkedAttr = task.completed ? 'checked' : '';
+        // escape text for safety
+        const escapedText = escapeHtml(task.text);
+        html += `
+          <li class="task-item ${completedClass}" data-task-id="${task.id}">
+            <input type="checkbox" class="task-check" ${checkedAttr} data-id="${task.id
