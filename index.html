@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>rawdog · focus</title>
+  <title>rawdog · liquid glass</title>
   
   <link rel="manifest" href="data:application/manifest+json,{name:'rawdog',short_name:'rawdog',theme_color:'%23f5f5f7',background_color:'%23f5f5f7',display:'standalone',scope:'/',start_url:'/'}">
   <meta name="theme-color" content="#f5f5f7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   
-  <!-- Feather Icons -->
   <script src="https://unpkg.com/feather-icons"></script>
   
   <style>
@@ -20,20 +19,18 @@
       box-sizing: border-box;
     }
 
-    /* Apple system fonts */
+    /* Liquid animated background */
     body {
-      --bg-color: #f5f5f7;
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --text-primary: #1d1d1f;
-      --text-secondary: #6e6e73;
       --accent: #007aff;
       --accent-light: #e8f0fe;
-      --border-light: rgba(0, 0, 0, 0.04);
-      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
-      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.5);
       --progress-bg: #e6e6e8;
-      --input-bg: rgba(255, 255, 255, 0.8);
+      --input-bg: rgba(255, 255, 255, 0.5);
       --delete-hover: #ff3b30;
+      --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
       
       min-height: 100vh;
       display: flex;
@@ -43,36 +40,93 @@
       padding: 1.5rem;
       margin: 0;
       color: var(--text-primary);
-      background: var(--bg-color);
-      transition: background 0.3s, color 0.2s;
+      background: linear-gradient(-45deg, #f0f4fa, #e6ecf5, #f5f7fb, #eaf0f8);
+      background-size: 400% 400%;
+      animation: liquidMove 20s ease infinite;
+      position: relative;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.3s, color 0.2s;
     }
 
-    /* Dark mode */
+    /* Soft floating orbs for depth */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.06) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(90, 170, 255, 0.05) 0%, transparent 50%);
+      animation: orbFloat 28s infinite alternate ease-in-out;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes liquidMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-3%, -2%) scale(1.02); }
+    }
+
+    /* Dark mode liquid glass */
     body.dark {
-      --bg-color: #000000;
-      --card-bg: rgba(28, 28, 30, 0.9);
+      --accent: #0a84ff;
+      --accent-light: rgba(10, 132, 255, 0.15);
       --text-primary: #ffffff;
       --text-secondary: #98989e;
-      --border-light: rgba(255, 255, 255, 0.08);
-      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
-      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+      --card-bg: rgba(28, 28, 30, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
       --progress-bg: #3a3a3c;
-      --input-bg: rgba(44, 44, 46, 0.8);
+      --input-bg: rgba(44, 44, 46, 0.5);
+      --delete-hover: #ff453a;
+      --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      
+      background: linear-gradient(-45deg, #0c111a, #101824, #0a101c, #0e1622);
+      background-size: 400% 400%;
+    }
+    body.dark::before {
+      background: radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(100, 180, 255, 0.06) 0%, transparent 50%);
     }
 
-    /* Main card – Apple style */
+    /* Main card – liquid glass with Apple proportions */
     .app-card {
       max-width: 680px;
       width: 100%;
       background: var(--card-bg);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-radius: 32px;
-      box-shadow: var(--shadow-md);
-      padding: 2.5rem 2rem;
-      transition: box-shadow 0.3s ease;
-      border: 0.5px solid var(--border-light);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      border-radius: 36px;
+      box-shadow: var(--shadow-card);
+      padding: 2.5rem 2.2rem;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      border: 0.5px solid var(--glass-border);
+      animation: cardFloat 6s infinite alternate ease-in-out;
+      position: relative;
+      z-index: 10;
+    }
+
+    @keyframes cardFloat {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-4px); }
+    }
+
+    /* Glossy edge highlight */
+    .app-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      border-radius: 36px 36px 0 0;
+      pointer-events: none;
     }
 
     /* Header */
@@ -80,7 +134,7 @@
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     h1 {
@@ -91,6 +145,7 @@
       display: flex;
       align-items: baseline;
       gap: 0.2rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
     .rawdog-emoji {
       font-size: 2.2rem;
@@ -106,12 +161,8 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--accent);
-      border: none;
-      backdrop-filter: none;
-    }
-    body.dark .badge {
-      background: rgba(0, 122, 255, 0.15);
-      color: #3a9cff;
+      backdrop-filter: blur(10px);
+      border: 0.5px solid var(--glass-border);
     }
 
     /* Status row */
@@ -119,7 +170,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.8rem;
     }
     .greeting {
       font-size: 1rem;
@@ -129,9 +180,9 @@
     .streak-pill {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: transparent;
-      padding: 0.3rem 0;
+      padding: 0.2rem 0;
       font-weight: 500;
     }
     .streak-number {
@@ -162,6 +213,7 @@
       background: var(--progress-bg);
       border-radius: 4px;
       overflow: hidden;
+      backdrop-filter: blur(5px);
     }
     .progress-fill {
       height: 100%;
@@ -169,9 +221,10 @@
       background: var(--accent);
       border-radius: 4px;
       transition: width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+      box-shadow: 0 0 6px var(--accent);
     }
 
-    /* Checklist – clean items */
+    /* Checklist – clean items with glass hover */
     .checklist {
       list-style: none;
       margin: 0.5rem 0 2rem;
@@ -180,27 +233,30 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 0.9rem 0.4rem;
-      border-bottom: 0.5px solid var(--border-light);
+      padding: 0.9rem 0.6rem;
+      border-bottom: 0.5px solid var(--glass-border);
       transition: background 0.15s;
+      border-radius: 16px;
     }
-    .task-item:last-child {
-      border-bottom: none;
+    .task-item:hover {
+      background: rgba(128, 128, 128, 0.04);
     }
 
-    /* Apple‑style checkbox */
+    /* Apple‑style checkbox with glass touch */
     .checkbox-custom {
       flex-shrink: 0;
       width: 22px;
       height: 22px;
-      background: transparent;
+      background: var(--input-bg);
+      backdrop-filter: blur(8px);
       border-radius: 6px;
-      border: 2px solid var(--text-secondary);
+      border: 1.5px solid var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: all 0.15s ease;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
     }
     .checkbox-custom.checked {
       background: var(--accent);
@@ -275,7 +331,7 @@
       font-size: 1rem;
     }
 
-    /* Add section */
+    /* Add section – glass input */
     .add-section {
       display: flex;
       gap: 0.8rem;
@@ -284,9 +340,9 @@
     .add-input {
       flex: 1;
       background: var(--input-bg);
-      backdrop-filter: blur(10px);
-      border: 0.5px solid var(--border-light);
-      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 18px;
       padding: 1rem 1.2rem;
       font-size: 16px;
       color: var(--text-primary);
@@ -296,7 +352,7 @@
     }
     .add-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
     }
     .add-input::placeholder {
       color: var(--text-secondary);
@@ -316,12 +372,14 @@
       align-items: center;
       gap: 6px;
       white-space: nowrap;
-      box-shadow: none;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+      backdrop-filter: blur(5px);
       letter-spacing: -0.01em;
     }
     .btn:hover {
       background: #005bbf;
       transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
     }
     body.dark .btn {
       background: #0a84ff;
@@ -331,18 +389,17 @@
     }
 
     .btn-secondary {
-      background: transparent;
-      color: var(--accent);
+      background: var(--input-bg);
+      backdrop-filter: blur(12px);
+      color: var(--text-primary);
       padding: 0.6rem 1.2rem;
-      border: 0.5px solid var(--border-light);
-      box-shadow: var(--shadow-sm);
+      border: 0.5px solid var(--glass-border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      font-weight: 400;
     }
     .btn-secondary:hover {
-      background: rgba(0, 122, 255, 0.05);
+      background: rgba(128, 128, 128, 0.08);
       transform: scale(1.01);
-    }
-    body.dark .btn-secondary {
-      color: #3a9cff;
     }
 
     .action-bar {
@@ -364,7 +421,7 @@
       align-items: center;
       font-size: 0.75rem;
       color: var(--text-secondary);
-      border-top: 0.5px solid var(--border-light);
+      border-top: 0.5px solid var(--glass-border);
       padding-top: 1.2rem;
     }
     .footer-actions button {
@@ -376,6 +433,7 @@
       text-decoration: none;
       opacity: 0.8;
       padding: 0 4px;
+      transition: opacity 0.2s;
     }
     .footer-actions button:hover {
       opacity: 1;
@@ -388,13 +446,13 @@
       left: 50%;
       transform: translateX(-50%);
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
+      backdrop-filter: blur(30px);
       color: var(--text-primary);
       padding: 12px 24px;
       border-radius: 40px;
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-card);
       z-index: 999;
-      border: 0.5px solid var(--border-light);
+      border: 0.5px solid var(--glass-border);
       display: flex;
       align-items: center;
       gap: 16px;
@@ -463,7 +521,7 @@
   </div>
 
   <div class="footer-bar">
-    <span>rawdog · focus</span>
+    <span>rawdog · liquid glass</span>
     <div class="footer-actions">
       <button id="exportDataBtn"><i data-feather="download" width="14" height="14"></i> Export</button>
       <button id="shareStreakBtn"><i data-feather="share-2" width="14" height="14"></i> Share</button>
@@ -479,9 +537,9 @@
   (function(){
     "use strict";
     // ---------- STATE & STORAGE ----------
-    const STORAGE_KEY = 'rawdog_tasks_v2';
-    const STREAK_KEY = 'rawdog_streak_v2';
-    const PREFS_KEY = 'rawdog_prefs_v2';
+    const STORAGE_KEY = 'rawdog_tasks_v3';
+    const STREAK_KEY = 'rawdog_streak_v3';
+    const PREFS_KEY = 'rawdog_prefs_v3';
     let tasks = [];
     let streak = 0;
     let lastCompletionDate = null;
@@ -562,7 +620,6 @@
           streak = diff===1 ? streak+1 : 1;
         }
         lastCompletionDate = today; saveStreak();
-        // confetti could go here
       }
       updateStreakUI();
     }
